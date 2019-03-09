@@ -77,7 +77,7 @@ end
 
 
 local function calcRandomHole()
-   return 100 + 20*math.random(10)
+   return 20*math.random(10)
 end
 
 local function loadBestScore()
@@ -279,16 +279,16 @@ local function collision(i)
   local boom = 0
   local x = pipes[i].x
   local y = pipes[i].y
-  print(dx)
+  --[[ print(dx)
   print(dy)
   print("pipes pos x: " .. x)
   print("pipes pos y: " .. y)
   print("birds pos x: " .. xBird)
-  print("birds pos y: " .. yBird)
+  print("birds pos y: " .. yBird) ]]
   local difx = xBird - x
   local dify = yBird - y
-  print("difx: " .. difx)
-  print("dify: " .. dify)
+  --[[ print("difx: " .. difx)
+  print("dify: " .. dify) ]]
 
   if difx<0 then
     difx=difx*-1
@@ -301,11 +301,10 @@ local function collision(i)
     boom = 1
   end
 
-  --[[ if xBird > (x-dx) and xBird < (x+dx) then
-    if yBird > (y+dy) and yBird < (y-dy) then
-      boom = 1
-    end
-  end ]]
+  if yBird < - bird.height then
+    boom = 1
+  end
+
   return boom
 end
 
@@ -409,8 +408,8 @@ local function setupImages()
   board.alpha = 0
 
   local txt = {
-    x=display.contentCenterX, y=60,
-    text="",
+    x=display.actualContentWidth-100 , y=20,
+    text="Score: ",
     font="Assets/troika.otf",
     fontSize=35 }
 
