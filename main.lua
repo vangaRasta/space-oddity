@@ -285,11 +285,27 @@ local function collision(i)
   print("pipes pos y: " .. y)
   print("birds pos x: " .. xBird)
   print("birds pos y: " .. yBird)
-  if xBird > (x-dx) and xBird < (x+dx) then
+  local difx = xBird - x
+  local dify = yBird - y
+  print("difx: " .. difx)
+  print("dify: " .. dify)
+
+  if difx<0 then
+    difx=difx*-1
+  end
+  if dify<0 then
+    dify=dify*-1
+  end
+  
+  if difx < dx and dify < dy then
+    boom = 1
+  end
+
+  --[[ if xBird > (x-dx) and xBird < (x+dx) then
     if yBird > (y+dy) and yBird < (y-dy) then
       boom = 1
     end
-  end
+  end ]]
   return boom
 end
 
