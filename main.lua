@@ -99,9 +99,9 @@ end
 local function setupBird()
   local options =
   {
-      width = 70,
+      width = 93,
       height = 50,
-      numFrames = 4,
+      numFrames = 3,
       sheetContentWidth = 280,  -- width of original 1x size of entire sheet
       sheetContentHeight = 50  -- height of original 1x size of entire sheet
   }
@@ -112,8 +112,8 @@ local function setupBird()
       name="walking",
       start=1,
       count=3,
-      time=300,
-      loopCount = 2,   -- Optional ; default is 0 (loop indefinitely)
+      time=800,
+      loopCount = 0,   -- Optional ; default is 0 (loop indefinitely)
       loopDirection = "forward"    -- Optional ; values include "forward" or "bounce"
   }
   bird = display.newSprite( imageSheet, sequenceData )
