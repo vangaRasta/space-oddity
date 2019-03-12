@@ -39,7 +39,11 @@ local bestTitle
 local silver
 local gold
 
-local upBtn, downBtn
+local upBtn
+local downBtn
+
+local moveX
+local moveY = -50
 
 local pipes = {}
 
@@ -146,32 +150,57 @@ end
 
 --[[ local onPressEventButtonUp = function (event )
   Runtime:removeEventListener("enterFrame",  moveBird )
-   function  moveBird ()
-           bird.y = bird.y - 2;
+  function  moveBird ()
+           moveY = bird.y - 2;
   end
-          Runtime:addEventListener("enterFrame",  moveBird )
+
+  if boom ~= 0 then
+    Runtime:addEventListener("enterFrame",  moveBird )
+  else 
+    Runtime:removeEventListener("enterFrame",  moveBird )
+  end
 end
 
 local onPressEventButtonDown = function (event )
   Runtime:removeEventListener("enterFrame",  moveBird )
-   function  moveBird ()
-           bird.y = bird.y + 2;
+  function  moveBird ()
+           moveY = bird.y + 2;
   end
-          Runtime:addEventListener("enterFrame",  moveBird )
+  
+  if boom ~= 1 then
+    Runtime:addEventListener("enterFrame",  moveBird )
+  else 
+    Runtime:removeEventListener("enterFrame",  moveBird )
+  end  
 end ]]
 
+local onPressEventButtonUp = function(event)
+  if (gameStatus == 1) then
+    moveY = bird.y - 10
+  end
+  --print("Up")
+end
+
+local onPressEventButtonDown = function(event)
+  if (gameStatus == 1) then
+    moveY = bird.y + 10
+  end
+  --print("Down")
+end
+
 local function wing()
+  print("GameStaus1 --> " .. gameStatus)
   if gameStatus == 0 then
     gameStatus = 1
     getReady.alpha = 0
   end
-
+  print("GameStaus2 --> " .. gameStatus)
   if gameStatus == 1 then
-    vBird = wBird
+    --vBird = wBird
     bird:play()
     audio.play(wingSound)
   end
-
+  print("GameStaus3 --> " .. gameStatus)
   if gameStatus == 3 then
     gameStatus = 0
     initGame()
@@ -249,6 +278,7 @@ local function crash()
 end
 
 local function collision(i)
+  local eps = 10
   local dx = pipes[i].width -- horizontal space of hole
   local dy = pipes[i].height -- vertical space of hole
   local boom = 0
@@ -275,8 +305,12 @@ local function collision(i)
     boom = 1
   end
 
-  if yBird < -bird.height then
+  if yBird < -eps then
     boom = 1
+  end
+
+  if yBird > yLand - eps then
+    boom = 1;
   end
 
   return boom
@@ -312,24 +346,32 @@ local function gameLoop()
         explosion()
         audio.play(dieSound)
         gameStatus = 2
+        crash()
       end
     end
   end
 
-  if gameStatus == 1 or gameStatus == 2 then
-    vBird = vBird + dt * g
-    yBird = yBird + dt * vBird
-    if yBird > yLand - eps then
+  if gameStatus == 1 --[[ or gameStatus == 2 ]] then
+    --vBird = vBird + dt * g
+    --yBird = yBird + dt * vBird
+
+    if moveY ~= -50 then
+      yBird = moveY
+      moveY = -50
+    end
+
+    --[[ if yBird > yLand - eps then
       yBird = yLand - eps
       crash()
-    end
+    end ]]
+
     bird.x = xBird
     bird.y = yBird
-    if gameStatus == 1 then
+  --[[ if gameStatus == 1 then
       bird.rotation = -30 * math.atan(vBird / uBird)
     else
       bird.rotation = vBird / 8
-    end
+    end ]]
   end
 end
 
@@ -337,9 +379,10 @@ local function setupLand()
   land = display.newImageRect("Assets/land.png", display.actualContentWidth * 2, hLand * 2)
   land.x = xLand
   land.y = yLand + hLand
-  
+
   --Top button
-  upBtn = widget.newButton{
+  upBtn =
+    widget.newButton {
     id = "btnUp",
     width = 50,
     height = 50,
@@ -350,7 +393,8 @@ local function setupLand()
   upBtn.x = display.actualContentWidth - 80
   upBtn.y = display.actualContentHeight - 30
   --Down button
-  downBtn = widget.newButton{
+  downBtn =
+    widget.newButton {
     id = "btnDown",
     width = 50,
     height = 50,
@@ -363,7 +407,6 @@ local function setupLand()
 end
 
 local function setupImages()
-  
   local ground = display.newImageRect("Assets/ground.png", display.actualContentWidth, display.actualContentHeight)
   ground.x = display.contentCenterX
   ground.y = display.contentCenterY
