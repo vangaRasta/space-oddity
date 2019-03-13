@@ -46,6 +46,7 @@ local moveX
 local moveY = -50
 
 local pipes = {}
+local awards = {}
 
 local function loadSounds()
   dieSound = audio.loadSound("Sounds/sfx_die.mp3")
@@ -131,10 +132,15 @@ local function initGame()
   title.text = score
   --  title.text = hLand
 
-  for i = 1, 3 do
+  for i = 1, 4 do
     pipes[i].x = 400 + display.contentCenterX * (i - 1)
     pipes[i].y = calcRandomHole()
   end
+  for i = 1, 2 do
+    awards[i].x = 400 + display.contentCenterX * (i - 1)
+    awards[i].y = calcRandomHole()
+  end
+
   yBird = display.contentCenterY - 50
   xBird = 50
   getReady.y = 0
@@ -325,7 +331,7 @@ local function gameLoop()
       xLand = display.contentCenterX * 2 + xLand
     end
     land.x = xLand
-    for i = 1, 3 do
+    for i = 1, 4 do
       local xb = xBird - eps
       local xOld = pipes[i].x
       local x = xOld + dt * uBird
@@ -349,6 +355,18 @@ local function gameLoop()
         crash()
       end
     end
+
+    for i = 1, 2 do
+      local xb = xBird - eps
+      local xOld = awards[i].x
+      local x = xOld + dt * uBird
+      if x < leftEdge then
+        x = wPipe * 3 + x
+        awards[i].y = calcRandomHole()
+      end
+      awards[i].x = x
+    end
+
   end
 
   if gameStatus == 1 --[[ or gameStatus == 2 ]] then
@@ -412,10 +430,16 @@ local function setupImages()
   ground.y = display.contentCenterY
   ground:addEventListener("tap", wing)
 
-  for i = 1, 3 do
+  for i = 1, 4 do
     pipes[i] = display.newImageRect("Assets/silver.png", 40, 40)
     pipes[i].x = 440 + wPipe * (i - 1)
     pipes[i].y = calcRandomHole()
+  end
+
+  for i = 1, 2 do
+    awards[i] = display.newImageRect("Assets/gold.png", 40, 40)
+    awards[i].x = 440 + wPipe * (i - 1)
+    awards[i].y = calcRandomHole()
   end
 
   getReady = display.newImageRect("Assets/getready.png", 200, 60)
