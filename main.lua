@@ -25,6 +25,8 @@ local dt = 0.025
 local score = 0
 local bestScore = 0
 local scoreStep = 5
+local gameSpeed = 25
+local gameLoopTimer
 
 local bird
 local land
@@ -38,6 +40,7 @@ local scoreTitle
 local bestTitle
 local silver
 local gold
+local levelBar
 
 local upBtn
 local downBtn
@@ -57,8 +60,8 @@ local function loadSounds()
   boomSound = audio.loadSound("Sounds/sfx_boom.mp3")
 end
 
-local function calcRandomHole()
-  return 20 * math.random(10)
+local function calcRandomHole(m, n)
+  return m * math.random(n)
 end
 
 local function loadBestScore()
@@ -127,18 +130,20 @@ local function prompt(tempo)
 end
 
 local function initGame()
+  gameSpeed = 25
   score = 0
   scoreStep = 5
   title.text = score
   --  title.text = hLand
 
-  for i = 1, 4 do
+  for i = 1, 3 do
     pipes[i].x = 400 + display.contentCenterX * (i - 1)
-    pipes[i].y = calcRandomHole()
+    pipes[i].y = calcRandomHole(20, 10)
   end
+
   for i = 1, 2 do
     awards[i].x = 400 + display.contentCenterX * (i - 1)
-    awards[i].y = calcRandomHole()
+    awards[i].y = calcRandomHole(30, 10)
   end
 
   yBird = display.contentCenterY - 50
@@ -154,59 +159,30 @@ local function initGame()
   transition.to(getReady, {time = 600, y = yReady, transition = easing.outBounce, onComplete = prompt})
 end
 
---[[ local onPressEventButtonUp = function (event )
-  Runtime:removeEventListener("enterFrame",  moveBird )
-  function  moveBird ()
-           moveY = bird.y - 2;
-  end
-
-  if boom ~= 0 then
-    Runtime:addEventListener("enterFrame",  moveBird )
-  else 
-    Runtime:removeEventListener("enterFrame",  moveBird )
-  end
-end
-
-local onPressEventButtonDown = function (event )
-  Runtime:removeEventListener("enterFrame",  moveBird )
-  function  moveBird ()
-           moveY = bird.y + 2;
-  end
-  
-  if boom ~= 1 then
-    Runtime:addEventListener("enterFrame",  moveBird )
-  else 
-    Runtime:removeEventListener("enterFrame",  moveBird )
-  end  
-end ]]
-
 local onPressEventButtonUp = function(event)
   if (gameStatus == 1) then
     moveY = bird.y - 10
   end
-  --print("Up")
 end
 
 local onPressEventButtonDown = function(event)
   if (gameStatus == 1) then
     moveY = bird.y + 10
   end
-  --print("Down")
 end
 
 local function wing()
-  print("GameStaus1 --> " .. gameStatus)
   if gameStatus == 0 then
     gameStatus = 1
     getReady.alpha = 0
   end
-  print("GameStaus2 --> " .. gameStatus)
+
   if gameStatus == 1 then
     --vBird = wBird
     bird:play()
     audio.play(wingSound)
   end
-  print("GameStaus3 --> " .. gameStatus)
+
   if gameStatus == 3 then
     gameStatus = 0
     initGame()
@@ -283,23 +259,17 @@ local function crash()
   transition.to(board, {time = 600, y = yReady + 100, transition = easing.outBounce})
 end
 
-local function collision(i)
+local function collision(obj)
   local eps = 10
-  local dx = pipes[i].width -- horizontal space of hole
-  local dy = pipes[i].height -- vertical space of hole
+  local dx = obj.width -- horizontal space of hole
+  local dy = obj.height -- vertical space of hole
   local boom = 0
-  local x = pipes[i].x
-  local y = pipes[i].y
-  --[[ print(dx)
-  print(dy)
-  print("pipes pos x: " .. x)
-  print("pipes pos y: " .. y)
-  print("birds pos x: " .. xBird)
-  print("birds pos y: " .. yBird) ]]
+  local x = obj.x
+  local y = obj.y
+
   local difx = xBird - x
   local dify = yBird - y
-  --[[ print("difx: " .. difx)
-  print("dify: " .. dify) ]]
+
   if difx < 0 then
     difx = difx * -1
   end
@@ -316,7 +286,7 @@ local function collision(i)
   end
 
   if yBird > yLand - eps then
-    boom = 1;
+    boom = 1
   end
 
   return boom
@@ -331,24 +301,20 @@ local function gameLoop()
       xLand = display.contentCenterX * 2 + xLand
     end
     land.x = xLand
-    for i = 1, 4 do
+    for i = 1, 3 do
       local xb = xBird - eps
       local xOld = pipes[i].x
       local x = xOld + dt * uBird
       if x < leftEdge then
         x = wPipe * 3 + x
-        pipes[i].y = calcRandomHole()
+        pipes[i].y = calcRandomHole(20, 10)
       end
       if xOld > xb and x <= xb then
         score = score + 1
         title.text = score
-        if score == scoreStep then
-          scoreStep = scoreStep + 5
-          audio.play(pointSound)
-        end
       end
       pipes[i].x = x
-      if collision(i) == 1 then
+      if collision(pipes[i]) == 1 then
         explosion()
         audio.play(dieSound)
         gameStatus = 2
@@ -362,11 +328,24 @@ local function gameLoop()
       local x = xOld + dt * uBird
       if x < leftEdge then
         x = wPipe * 3 + x
-        awards[i].y = calcRandomHole()
+        awards[i].y = calcRandomHole(20, 10)
       end
       awards[i].x = x
+      if collision(awards[i]) == 1 then
+        --score = score + 10
+        audio.play(pointSound)
+      end
     end
 
+    if score == scoreStep then
+      scoreStep = scoreStep + 5
+      audio.play(pointSound)
+      if gameSpeed > 5 then
+        gameSpeed = gameSpeed - 2
+        timer.cancel(gameLoopTimer)
+        gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)
+      end
+    end
   end
 
   if gameStatus == 1 --[[ or gameStatus == 2 ]] then
@@ -382,7 +361,6 @@ local function gameLoop()
       yBird = yLand - eps
       crash()
     end ]]
-
     bird.x = xBird
     bird.y = yBird
   --[[ if gameStatus == 1 then
@@ -430,16 +408,16 @@ local function setupImages()
   ground.y = display.contentCenterY
   ground:addEventListener("tap", wing)
 
-  for i = 1, 4 do
+  for i = 1, 3 do
     pipes[i] = display.newImageRect("Assets/silver.png", 40, 40)
     pipes[i].x = 440 + wPipe * (i - 1)
-    pipes[i].y = calcRandomHole()
+    pipes[i].y = calcRandomHole(20, 10)
   end
 
   for i = 1, 2 do
     awards[i] = display.newImageRect("Assets/gold.png", 40, 40)
-    awards[i].x = 440 + wPipe * (i - 1)
-    awards[i].y = calcRandomHole()
+    awards[i].x = calcRandomHole(30, 10)
+    awards[i].y = calcRandomHole(30, 10)
   end
 
   getReady = display.newImageRect("Assets/getready.png", 200, 60)
@@ -464,9 +442,13 @@ local function setupImages()
   silver.x = -64
   silver.y = 4
 
-  gold = display.newImageRect(board, "Assets/gold.png", 44, 44)
+  gold = display.newImageRect("Assets/gold.png", 44, 44)
   gold.x = -64
   gold.y = 4
+
+  levelBar = display.newImageRect(board, "Assets/minus.png", 24, 24)
+  levelBar.x = scoreTitle.x - 50
+  levelBar.y = 20
 
   board.x = display.contentCenterX
   board.y = 0
@@ -492,8 +474,8 @@ setupExplosion()
 setupLand()
 initGame()
 loadBestScore()
-gameLoopTimer = timer.performWithDelay(25, gameLoop, 0)
-
+gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)
+print("game speed: " .. gameSpeed)
 -- debug text line
 --local loadingText = display.newText( "Debug info", display.contentCenterX, display.contentCenterY, nil, 20)
 
