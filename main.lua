@@ -104,7 +104,7 @@ end
 
 local function setupBird()
   local options = {
-    width = 93,
+    width = 70,
     height = 50,
     numFrames = 3,
     sheetContentWidth = 280, -- width of original 1x size of entire sheet
@@ -115,10 +115,10 @@ local function setupBird()
   local sequenceData = {
     name = "walking",
     start = 1,
-    count = 3,
+    count = 4,
     time = 800,
     loopCount = 0, -- Optional ; default is 0 (loop indefinitely)
-    loopDirection = "forward" -- Optional ; values include "forward" or "bounce"
+    loopDirection = "bounce" -- Optional ; values include "forward" or "bounce"
   }
   bird = display.newSprite(imageSheet, sequenceData)
   bird.x = xBird
@@ -131,6 +131,11 @@ end
 
 local function initGame()
   gameSpeed = 25
+  --[[ if gameLoopTimer ~= nil then
+    timer.cancel(gameLoopTimer)
+    gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)
+  end ]]
+  
   score = 0
   scoreStep = 5
   title.text = score
@@ -273,11 +278,13 @@ local function collision(obj)
   if difx < 0 then
     difx = difx * -1
   end
+
   if dify < 0 then
     dify = dify * -1
   end
 
   if difx < dx and dify < dy then
+    --obj:removeSelf()
     boom = 1
   end
 
@@ -336,6 +343,13 @@ local function gameLoop()
         audio.play(pointSound)
       end
     end
+    
+    if score == 0 then
+      gameSpeed = 25
+      timer.cancel(gameLoopTimer)
+      gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)      
+    end
+    
 
     if score == scoreStep then
       scoreStep = scoreStep + 5
@@ -343,11 +357,11 @@ local function gameLoop()
       if gameSpeed > 5 then
         gameSpeed = gameSpeed - 2
         timer.cancel(gameLoopTimer)
-        gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)
+        gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)        
       end
     end
   end
-
+  
   if gameStatus == 1 --[[ or gameStatus == 2 ]] then
     --vBird = vBird + dt * g
     --yBird = yBird + dt * vBird
@@ -369,6 +383,14 @@ local function gameLoop()
       bird.rotation = vBird / 8
     end ]]
   end
+end
+
+function drawLevelbar()
+  local levelPosX = levelBar.x
+  local levelPosY = levelBar.y
+  levelBar = display.newImageRect("Assets/minus.png", 24, 24)
+  levelBar.x = levelPosX + 5
+  levelBar.y = levelPosY
 end
 
 local function setupLand()
@@ -398,7 +420,7 @@ local function setupLand()
     overFile = "Assets/down.png",
     onPress = onPressEventButtonDown
   }
-  downBtn.x = display.actualContentWidth - 150
+  downBtn.x = 0
   downBtn.y = display.actualContentHeight - 30
 end
 
@@ -446,17 +468,13 @@ local function setupImages()
   gold.x = -64
   gold.y = 4
 
-  levelBar = display.newImageRect(board, "Assets/minus.png", 24, 24)
-  levelBar.x = scoreTitle.x - 50
-  levelBar.y = 20
-
   board.x = display.contentCenterX
   board.y = 0
   board.alpha = 0
 
   local txt = {
-    x = display.actualContentWidth - 100,
-    y = 20,
+    x = display.contentCenterX,
+    y =  20,
     text = "Score: ",
     font = "Assets/troika.otf",
     fontSize = 35
@@ -464,6 +482,11 @@ local function setupImages()
 
   title = display.newText(txt)
   title:setFillColor(1, 1, 1)
+
+  
+  levelBar = display.newImageRect("Assets/minus.png", 24, 24)
+  levelBar.x = title.x - 50
+  levelBar.y = 20
 end
 
 -- Start application point
