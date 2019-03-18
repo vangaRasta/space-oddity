@@ -48,6 +48,8 @@ local downBtn
 local moveX
 local moveY = -50
 
+local difCount = 2
+
 local pipes = {}
 local awards = {}
 
@@ -106,7 +108,7 @@ local function setupBird()
   local options = {
     width = 70,
     height = 50,
-    numFrames = 3,
+    numFrames = 4,
     sheetContentWidth = 280, -- width of original 1x size of entire sheet
     sheetContentHeight = 50 -- height of original 1x size of entire sheet
   }
@@ -131,6 +133,7 @@ end
 
 local function initGame()
   gameSpeed = 25
+  difCount = 2
   --[[ if gameLoopTimer ~= nil then
     timer.cancel(gameLoopTimer)
     gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)
@@ -141,15 +144,15 @@ local function initGame()
   title.text = score
   --  title.text = hLand
 
-  for i = 1, 3 do
+  for i = 1, 6 do
     pipes[i].x = 400 + display.contentCenterX * (i - 1)
     pipes[i].y = calcRandomHole(20, 10)
   end
 
-  for i = 1, 2 do
+  --[[ for i = 1, 2 do
     awards[i].x = 400 + display.contentCenterX * (i - 1)
     awards[i].y = calcRandomHole(30, 10)
-  end
+  end ]]
 
   yBird = display.contentCenterY - 50
   xBird = 50
@@ -302,19 +305,22 @@ end
 local function gameLoop()
   local eps = 10
   local leftEdge = -60
+  
   if gameStatus == 1 then
     xLand = xLand + dt * uBird
     if xLand < 0 then
       xLand = display.contentCenterX * 2 + xLand
     end
+    
     land.x = xLand
-    for i = 1, 3 do
+    
+    for i = 1, difCount do      
       local xb = xBird - eps
       local xOld = pipes[i].x
       local x = xOld + dt * uBird
       if x < leftEdge then
         x = wPipe * 3 + x
-        pipes[i].y = calcRandomHole(20, 10)
+        pipes[i].y = calcRandomHole(25, 10)
       end
       if xOld > xb and x <= xb then
         score = score + 1
@@ -329,7 +335,7 @@ local function gameLoop()
       end
     end
 
-    for i = 1, 2 do
+    --[[ for i = 1, 2 do
       local xb = xBird - eps
       local xOld = awards[i].x
       local x = xOld + dt * uBird
@@ -342,10 +348,11 @@ local function gameLoop()
         --score = score + 10
         audio.play(pointSound)
       end
-    end
+    end ]]
     
     if score == 0 then
       gameSpeed = 25
+      difCount = 3
       timer.cancel(gameLoopTimer)
       gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)      
     end
@@ -359,6 +366,11 @@ local function gameLoop()
         timer.cancel(gameLoopTimer)
         gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)        
       end
+
+      if difCount < 6 then
+        difCount = difCount + 1
+      end
+
     end
   end
   
@@ -422,6 +434,22 @@ local function setupLand()
   }
   downBtn.x = 0
   downBtn.y = display.actualContentHeight - 30
+
+  local txt = {
+    x = display.contentCenterX,
+    y =  display.actualContentHeight - 30,
+    text = "Score: ",
+    font = "Assets/troika.otf",
+    fontSize = 35
+  }
+
+  title = display.newText(txt)
+  title:setFillColor(1, 1, 1)
+
+  
+  --[[ levelBar = display.newImageRect("Assets/minus.png", 24, 24)
+  levelBar.x = title.x - 50
+  levelBar.y = display.actualContentHeight - 30 ]]
 end
 
 local function setupImages()
@@ -429,18 +457,28 @@ local function setupImages()
   ground.x = display.contentCenterX
   ground.y = display.contentCenterY
   ground:addEventListener("tap", wing)
+  
+  local imageArray = {
+    "Assets/currency.png",
+    "Assets/lock.png",
+    "Assets/security.png",
+    "Assets/server-crash.png",
+    "Assets/spam.png",
+    "Assets/phishing.png"
+  }
 
-  for i = 1, 3 do
-    pipes[i] = display.newImageRect("Assets/silver.png", 40, 40)
+  for i = 1, 6 do
+    pipes[i] = display.newImageRect(imageArray[i], 40, 40)
     pipes[i].x = 440 + wPipe * (i - 1)
-    pipes[i].y = calcRandomHole(20, 10)
+    pipes[i].y = calcRandomHole(25, 10)
+    transition.blink( pipes[i], { time=2500 } )   
   end
 
-  for i = 1, 2 do
+  --[[ for i = 1, 2 do
     awards[i] = display.newImageRect("Assets/gold.png", 40, 40)
     awards[i].x = calcRandomHole(30, 10)
     awards[i].y = calcRandomHole(30, 10)
-  end
+  end ]]
 
   getReady = display.newImageRect("Assets/getready.png", 200, 60)
   getReady.x = display.contentCenterX
@@ -465,28 +503,12 @@ local function setupImages()
   silver.y = 4
 
   gold = display.newImageRect("Assets/gold.png", 44, 44)
-  gold.x = -64
+  gold.x = -164
   gold.y = 4
 
   board.x = display.contentCenterX
   board.y = 0
-  board.alpha = 0
-
-  local txt = {
-    x = display.contentCenterX,
-    y =  20,
-    text = "Score: ",
-    font = "Assets/troika.otf",
-    fontSize = 35
-  }
-
-  title = display.newText(txt)
-  title:setFillColor(1, 1, 1)
-
-  
-  levelBar = display.newImageRect("Assets/minus.png", 24, 24)
-  levelBar.x = title.x - 50
-  levelBar.y = 20
+  board.alpha = 0  
 end
 
 -- Start application point
@@ -498,7 +520,6 @@ setupLand()
 initGame()
 loadBestScore()
 gameLoopTimer = timer.performWithDelay(gameSpeed, gameLoop, 0)
-print("game speed: " .. gameSpeed)
 -- debug text line
 --local loadingText = display.newText( "Debug info", display.contentCenterX, display.contentCenterY, nil, 20)
 
