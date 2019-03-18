@@ -10,6 +10,8 @@ local yLand = display.actualContentHeight - display.actualContentHeight * 0.2
 local hLand = display.actualContentHeight * 0.1
 local xLand = display.contentCenterX
 
+local xBuild = display.actualContentWidth + 30
+
 local yBird = display.contentCenterY - 50
 local xBird = 50
 
@@ -34,6 +36,8 @@ local title
 local getReady
 local gameOver
 local emitter
+local city
+local building1,building2,building3
 
 local board
 local scoreTitle
@@ -307,17 +311,23 @@ local function gameLoop()
   local leftEdge = -60
   
   if gameStatus == 1 then
-    xLand = xLand + dt * uBird
+    xLand = xLand + dt * uBird        
     if xLand < 0 then
       xLand = display.contentCenterX * 2 + xLand
     end
-    
     land.x = xLand
     
+    xBuild = xBuild + dt * uBird
+    building2.x = xBuild
+    if building2.x < -328 then
+      building2:translate( display.actualContentWidth*2, 0 )
+      xBuild = display.actualContentWidth*2
+    end
+
     for i = 1, difCount do      
       local xb = xBird - eps
       local xOld = pipes[i].x
-      local x = xOld + dt * uBird
+      local x = xOld + dt * uBird * 1.5
       if x < leftEdge then
         x = wPipe * 3 + x
         pipes[i].y = calcRandomHole(25, 10)
@@ -406,7 +416,7 @@ function drawLevelbar()
 end
 
 local function setupLand()
-  land = display.newImageRect("Assets/land.png", display.actualContentWidth * 2, hLand * 2)
+  land = display.newImageRect("Assets/land.png", display.actualContentWidth * 2, 1)
   land.x = xLand
   land.y = yLand + hLand
 
@@ -458,9 +468,17 @@ local function setupImages()
   ground.y = display.contentCenterY
   ground:addEventListener("tap", wing)
   
+  city = display.newImageRect("Assets/city.png", display.actualContentWidth, display.actualContentHeight)
+  city.x = display.contentCenterX
+  city.y = display.contentCenterY
+  
+  building2 = display.newImageRect("Assets/building.png", display.actualContentWidth, display.actualContentHeight)
+  building2.x = display.contentCenterX
+  building2.y = display.contentCenterY
+
   local imageArray = {
     "Assets/currency.png",
-    "Assets/lock.png",
+    "Assets/bug.png",
     "Assets/security.png",
     "Assets/server-crash.png",
     "Assets/spam.png",
